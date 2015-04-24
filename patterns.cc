@@ -5,13 +5,14 @@
 #include "TMath.h"
 
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <getopt.h>
 
 using namespace std;
 
 const char* program_name;
-char* tail;
+char* tail = "";
 
 void print_usage (FILE* stream, int exit_code) {
   fprintf (stream, "Usage: %s options [ ... ]\n", program_name);
@@ -26,8 +27,8 @@ void print_usage (FILE* stream, int exit_code) {
 void plot(TH1D & h) {
   TCanvas c("c", "c", 600, 600);
   h.Draw();
-  c.Print(Form("./plots/%s%s.pdf", h.GetName(), tail));
-  c.Print(Form("./plots/%s%s.root", h.GetName(), tail));
+  c.Print(Form("./plots_temp/%s%s.pdf", h.GetName(), tail));
+  h.SaveAs(Form("./plots_temp/%s%s.root", h.GetName(), tail));
 }
 
 void plot_2D(TH2D & h) {
@@ -36,8 +37,8 @@ void plot_2D(TH2D & h) {
 
   h.SetStats(0);
   h.Draw("COLZ");
-  c.Print(Form("./plots/%s%s.pdf", h.GetName(), tail));
-  c.Print(Form("./plots/%s%s.root", h.GetName(), tail));
+  c.Print(Form("./plots_temp/%s%s.pdf", h.GetName(), tail));
+  h.SaveAs(Form("./plots_temp/%s%s.root", h.GetName(), tail));
 }
 
 struct strip {
@@ -111,7 +112,7 @@ int main(int argc, char *argv[]) {
   }
   while (next_option != -1);
 
-  TFile StripCoords_f("CoordFiltered16.root"); //CoordFiltered extracted
+  TFile StripCoords_f("inputs/CoordFiltered16_layer5.root"); //CoordFiltered extracted
   TTree * StripCoords_t = (TTree*)StripCoords_f.Get("StripCoords");
   Int_t           layer, module, ladder, strip, segment;
   Float_t         x, y, z;
@@ -125,6 +126,8 @@ int main(int argc, char *argv[]) {
   TBranch        *b_z;   //!
 
   StripCoords_t->SetBranchAddress("layer", &layer, &b_layer);
+  StripCoords_t->SetBranchStatus("layer", false);
+
   StripCoords_t->SetBranchAddress("module", &module, &b_module);
   StripCoords_t->SetBranchAddress("ladder", &ladder, &b_ladder);
   StripCoords_t->SetBranchAddress("strip", &strip, &b_strip);
@@ -134,11 +137,11 @@ int main(int argc, char *argv[]) {
   StripCoords_t->SetBranchAddress("z", &z, &b_z);
   int sc_entries = StripCoords_t->GetEntries();
 
-  TH2D sc_xy_h("sc_xy_h", "sc_xy_h", 100, -120., 120., 100, -120., 120.);
-  TH2D sc_zr_h("sc_zr_h", "sc_zr_h", 100, -270., 270., 100, 0., 120.);
+  TH2D sc_xy_h("sc_xy_h", "sc_xy_h", 1000, -120., 120., 1000, -120., 120.);
+  TH2D sc_zr_h("sc_zr_h", "sc_zr_h", 1000, -270., 270., 1000, 0., 120.);
 
 
-  TFile patterns_f("treeBank.root");
+  TFile patterns_f("./inputs/treeBank.root");
   TTree * patterns_t = (TTree*)patterns_f.Get("sector0");
 
   Int_t           layers;
@@ -168,21 +171,23 @@ int main(int argc, char *argv[]) {
 
   cout << "patterns are " << patterns_entries << endl;
 
-  TH2D pat_xy_h("pat_xy_h", "pat_xy_h", 100, -120., 120., 100, -120., 120.);
-  TH2D pat_zr_h("pat_zr_h", "pat_zr_h", 100, -270., 270., 100, 0., 120.);
+  TH2D pat_xy_h("pat_xy_h", "pat_xy_h", 1000, -120., 120., 1000, -120., 120.);
+  TH2D pat_zr_h("pat_zr_h", "pat_zr_h", 1000, -270., 270., 1000, 0., 120.);
 
-  // for (int i = 0; i < sc_entries; i++) {
-  //   if (i%1000000==0) cout << i << " / " << sc_entries << endl;
-  //   StripCoords_t->GetEntry(i);
-  //   float r = TMath::Sqrt(x*x + y*y);
-  //   sc_xy_h.Fill(x, y);
-  //   sc_zr_h.Fill(z, r);
-  // }
+  for (int i = 0; i < sc_entries; i++) {
+    if (i%1000000==0) cout << i << " / " << sc_entries << endl;
+    StripCoords_t->GetEntry(i);
+    float r = TMath::Sqrt(x*x + y*y);
+    sc_xy_h.Fill(x, y);
+    sc_zr_h.Fill(z, r);
+  }
+  plot_2D(sc_xy_h);
+  plot_2D(sc_zr_h);
 
   vector <int> subbanks = {0, 0, 0, 0}; // phi1z1, phi1z2, phi2z1, phi2z2
 
-  TH1D sstrips_size_h("sstrips_size_h", "sstrips_size_h", 9, 0, 9);
-  TH1D sstrips_size_l5_h("sstrips_size_l5_h", "sstrips_size_l5_h", 9, 0, 9);
+  // TH1D sstrips_size_h("sstrips_size_h", "sstrips_size_h", 9, 0, 9);
+  // TH1D sstrips_size_l5_h("sstrips_size_l5_h", "sstrips_size_l5_h", 9, 0, 9);
 
   if (nevent == -1) nevent = patterns_entries;
   for (int j = ievent; j < ievent + nevent && j < patterns_entries; j++) {
@@ -190,11 +195,12 @@ int main(int argc, char *argv[]) {
 
     if (j%1000==0) cout << j << " / " << patterns_entries << endl;
 
-    bool found = false;
-    for (int i = 0; i < sc_entries && found == false; i++) {
+    // bool found = false;
+
+    for (int i = 0; i < sc_entries /* && found == false */; i++) {
       //StripCoords_t->GetEntry(i);
       b_layer->GetEntry(i);
-      if (layer == 5) {
+      //   if (layer == 5) {
         b_ladder->GetEntry(i);
         if ( (ladder - 1) == ladder_t[0]) {
           b_module->GetEntry(i);
@@ -211,18 +217,18 @@ int main(int argc, char *argv[]) {
                   float r = TMath::Sqrt(x*x + y*y);
                   pat_xy_h.Fill(x, y);
                   pat_zr_h.Fill(z, r);
-                  found = true;
-                  break;
+                  // found = true;
+                  // break;
                 }
               }
             }
           }
-        }
+          //   }
       }
       //else break;
       //cout << "not found" << endl;
     }
-    if (found == false) cout << "not found" << endl;
+    // if (found == false) cout << "not found" << endl;
 
     if (ladder_t[1] < 2 && module_t[5] < 5) {
       subbanks[0]++;
@@ -250,18 +256,19 @@ int main(int argc, char *argv[]) {
     sum += subbanks[i];
   }
 
-  plot_2D(sc_xy_h);
-  plot_2D(sc_zr_h);
   plot_2D(pat_xy_h);
   plot_2D(pat_zr_h);
 
-  plot(sstrips_size_h);
+  //  plot(sstrips_size_h);
 
+  ofstream subbankFile(Form("./subbanks/subbank%s.txt", tail));
   cout << "in total, the bank is made by #patterns = " << patterns_entries << " ( " << sum << " ) " << endl;
   cout << "the 4 subbanks are made by:" << endl;
   for (int i = 0; i < 4; i++) {
     cout << subbanks[i] << endl;
+    subbankFile << subbanks[i] << endl;
   }
+  subbankFile.close();
 
   return EXIT_SUCCESS;
 }

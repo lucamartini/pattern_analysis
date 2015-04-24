@@ -2,11 +2,17 @@
 
 import ROOT
 import os
+import sys
 
-file = ROOT.TFile("treeBank.root")
+file = ROOT.TFile("inputs/treeBank.root")
 tree = file.Get("sector0")
 entries = tree.GetEntries()
-jobs = 10
+if len(sys.argv) == 2:
+    jobs = int(sys.argv[1])
+else:
+    jobs = 10
+print "The number of jobs is ", jobs
+
 entries_per_job = int(entries/jobs)
 
 ipattern = []
@@ -16,7 +22,7 @@ log = []
 for i in range(jobs):
     ipattern.append(i*entries_per_job)
     tail.append('_'+str(i))
-    log.append('log_'+str(i)+'.out')
+    log.append(r'./logs/log_'+str(i)+'.out')
 
 for i in range(jobs-1):
     npattern.append(ipattern[i+1] - ipattern[i])
@@ -35,7 +41,7 @@ option_t = "--tail"
 for i in range(jobs):
     command = [command0, command1, option_i,
                str(ipattern[i]), option_n, str(npattern[i]),
-               option_t, tail[i], r'>>', log[i], r'&']
+               option_t, tail[i], r'>', log[i], r'&']
     # print "command: ", command
     s = " ".join(command)
     print s

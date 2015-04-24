@@ -22,8 +22,5 @@ CXX	         += -I$(INCLUDEDIR)
 patterns: patterns.cc
 	$(CXX) $(CXXFLAGS) -o patterns $(GLIBS)  $(LDFLAGS)  $<
 
-makeTrees: makeTrees.cc
-	$(CXX) $(CXXFLAGS) -o makeTrees $(GLIBS)  $(LDFLAGS)  $<
-
 clean:
 	rm -rf patterns
