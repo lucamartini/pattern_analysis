@@ -5,9 +5,7 @@ CXX           = clang++
 CXXFLAGS      = -fPIC -ansi -D_GNU_SOURCE -O2 -Wall -Wextra
 #LDFLAGS       = -g3
 
-CXXFLAGS      += $(ROOTCFLAGS)
-NGLIBS         = $(ROOTGLIBS)
-GLIBS          = $(filter-out -lNew, $(NGLIBS))
+ROOTLIBSFILTERED  = $(filter-out -lNew, $(ROOTGLIBS))
 
 INCLUDEDIR       = ./
 CXX	         += -I$(INCLUDEDIR)
@@ -19,8 +17,19 @@ CXX	         += -I$(INCLUDEDIR)
 # TARGETS #
 ###########
 
-patterns: patterns.cc
-	$(CXX) $(CXXFLAGS) -o patterns $(GLIBS)  $(LDFLAGS)  $<
+all: patterns patternsToStrips
+
+patterns: patterns.cc options plot
+	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o patterns  $(ROOTLIBSFILTERED) patterns.cc options plot
+
+patternsToStrips: patternsToStrips.cc options plot
+	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o patternsToStrips  $(ROOTLIBSFILTERED) patternsToStrips.cc options plot
+
+options: options.cc
+	$(CXX) -c $(CXXFLAGS) -o options options.cc
+
+plot: plot.cc
+	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) -o plot  plot.cc
 
 clean:
-	rm -rf patterns
+	rm -rf patterns patternsToStrips options plot

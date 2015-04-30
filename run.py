@@ -10,7 +10,7 @@ entries = tree.GetEntries()
 if len(sys.argv) == 2:
     jobs = int(sys.argv[1])
 else:
-    jobs = 10
+    jobs = 20
 print "The number of jobs is ", jobs
 
 entries_per_job = int(entries/jobs)
@@ -37,11 +37,13 @@ command1 = "./patterns"
 option_i = "--ievent"
 option_n = "--nevent"
 option_t = "--tail"
+# option_m = "--makeTree"
+option_m = " "
 
 for i in range(jobs):
     command = [command0, command1, option_i,
                str(ipattern[i]), option_n, str(npattern[i]),
-               option_t, tail[i], r'>', log[i], r'&']
+               option_t, tail[i], option_m, r'>', log[i], r'&']
     # print "command: ", command
     s = " ".join(command)
     print s
