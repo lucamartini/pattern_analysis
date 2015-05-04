@@ -3,6 +3,7 @@
 
 #include <string>
 #include "TCanvas.h"
+#include "TH1D.h"
 #include "TH2D.h"
 
 class plot {
@@ -20,7 +21,6 @@ class plot {
   TCanvas * c;
   std::string tail;
   std::string dir;
-
 
 };
 

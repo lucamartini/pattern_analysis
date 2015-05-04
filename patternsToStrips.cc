@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
   plot_->setDir("./plots_temp/");
   plot_->plot2D(sc_xy_h);
   plot_->plot2D(sc_zr_h);
-
+  return 0;
   vector <int> subbanks = {0, 0, 0, 0}; // phi1z1, phi1z2, phi2z1, phi2z2
 
   vector <TH2D*> subpats_xy_h;

@@ -68,23 +68,11 @@ int main(int argc, char **argv) {
 
   cout << "patterns are " << patterns_entries << endl;
 
-  TH2D * pat_xy_h = new TH2D("pat_xy_h", "pat_xy_h", 1000, -120., 120., 1000, -120., 120.);
-  TH2D * pat_zr_h = new TH2D("pat_zr_h", "pat_zr_h", 1000, -270., 270., 1000, 0., 120.);
-
   plot * plot_ = new plot();
   plot_->setTail(tail);
   plot_->setDir("./plots_temp/");
 
   vector <int> subbanks = {0, 0, 0, 0}; // phi1z1, phi1z2, phi2z1, phi2z2
-
-  vector <TH2D*> subpats_xy_h;
-  vector <TH2D*> subpats_zr_h;
-  for (int i = 0; i < 4; i++) {
-    TH2D * subpat_xy_h = new TH2D(Form("subpat%d_xy_h", i), Form("subpat%d_xy_h", i), 1000, -120., 120., 1000, -120., 120.);
-    subpats_xy_h.push_back(subpat_xy_h);
-    TH2D * subpat_zr_h = new TH2D(Form("subpat%d_zr_h", i), Form("subpat%d_zr_h", i), 1000, -270., 270., 1000, 0., 120.);
-    subpats_zr_h.push_back(subpat_zr_h);
-  }
 
   if (nevent == -1) nevent = patterns_entries;
   int max_entry = min(ievent + nevent, patterns_entries);
@@ -117,11 +105,7 @@ int main(int argc, char **argv) {
   int sum(0);
   for (int i = 0; i < 4; i++) {
     sum += subbanks[i];
-    plot_->plot2D(subpats_xy_h.at(i));
-    plot_->plot2D(subpats_zr_h.at(i));
   }
-  plot_->plot2D(pat_xy_h);
-  plot_->plot2D(pat_zr_h);
 
   //  plot(sstrips_size_h);
 

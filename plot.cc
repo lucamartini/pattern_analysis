@@ -1,11 +1,11 @@
 #include "plot.h"
 
-plot::plot(int x, int y) : tail(""), dir("./") {
+plot::plot(int x, int y) : tail(""),
+                           dir("./") {
   c = new TCanvas("c", "c", x, y);
 }
 
 plot::~plot() {
-  // delete c;
 }
 
 void plot::plot1D(TH1D * h) {
