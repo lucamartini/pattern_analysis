@@ -17,16 +17,19 @@ CXX	         += -I$(INCLUDEDIR)
 # TARGETS #
 ###########
 
-all: patterns patternsToStrips subpatterns
-
-patterns: patterns.cc options plot
-	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o patterns  $(ROOTLIBSFILTERED) patterns.cc options plot
+all: patternsToStrips subpatterns subpatterns_l5 drawgeometry
 
 patternsToStrips: patternsToStrips.cc options plot
 	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o patternsToStrips  $(ROOTLIBSFILTERED) patternsToStrips.cc options plot
 
-subpatterns: subpatterns.cc options plot
-	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o subpatterns  $(ROOTLIBSFILTERED) subpatterns.cc options plot
+subpatterns: subpatterns.cc options plot getModuleSizes
+	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o subpatterns  $(ROOTLIBSFILTERED) subpatterns.cc options plot getModuleSizes
+
+subpatterns_l5: subpatterns_l5.cc options plot getModuleSizes
+	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o subpatterns_l5  $(ROOTLIBSFILTERED) subpatterns_l5.cc options plot getModuleSizes
+
+drawgeometry: drawgeometry.cc options plot
+	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o drawgeometry  $(ROOTLIBSFILTERED) drawgeometry.cc options plot
 
 options: options.cc
 	$(CXX) -c $(CXXFLAGS) -o options options.cc
@@ -34,5 +37,8 @@ options: options.cc
 plot: plot.cc
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) -o plot  plot.cc
 
+getModuleSizes: getModuleSizes.cc
+	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) -o getModuleSizes  getModuleSizes.cc
+
 clean:
-	rm -rf patterns patternsToStrips subpatterns options plot
+	rm -rf patternsToStrips subpatterns subpatterns_l5 drawgeometry options plot getModuleSizes

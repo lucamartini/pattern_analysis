@@ -1,5 +1,6 @@
 #include "options.h"
 #include "plot.h"
+#include "getModuleSizes.h"
 
 #include "TTree.h"
 #include "TFile.h"
@@ -95,27 +96,68 @@ int main(int argc, char **argv) {
     }
   }
 
+  /*
   // layer, ladder, module, subbank
-  vector < vector < vector < vector <int > > > > subdetector_deg(6);
-  subdetector_deg.at(0).resize(3);
+  vector < vector < vector < vector <int > > > > subdetector_deg(6); // layers
+  subdetector_deg.at(0).resize(3); // ladders: 1 + 0.5
   subdetector_deg.at(1).resize(4);
   subdetector_deg.at(2).resize(6);
   subdetector_deg.at(3).resize(7);
   subdetector_deg.at(4).resize(10);
   subdetector_deg.at(5).resize(14);
+  int cont = 0;
   for (unsigned int i = 0; i < subdetector_deg.size(); i++) {
     for (unsigned int j = 0; j < subdetector_deg.at(i).size(); j++) {
-      subdetector_deg.at(i).at(j).resize(5 + i);
+
+      // subdetector_deg.at(i).at(j).resize(5 + i); // modules
+
+      if (i <= 2 || i == 4) {
+        subdetector_deg.at(i).at(j).resize(5 + i);
+      }
+      else if (i == 3) {
+        if (j%2==0) subdetector_deg.at(i).at(j).resize(4 + i);
+        else subdetector_deg.at(i).at(j).resize(5 + i);
+      }
+      else if (i == 5)  {
+        if (j%2==0) subdetector_deg.at(i).at(j).resize(5 + i);
+        else subdetector_deg.at(i).at(j).resize(4 + i);
+      }
+
       for (unsigned int k = 0; k < subdetector_deg.at(i).at(j).size(); k++) {
-        subdetector_deg.at(i).at(j).at(k).resize(4);
+        subdetector_deg.at(i).at(j).at(k).resize(subbanks.size()); // subbanks
+        cont++;
+        for (unsigned int l = 0; l < subdetector_deg.at(i).at(j).at(k).size(); l++) {
+          subdetector_deg.at(i).at(j).at(k).at(l) = 0;
+
+        }
+      }
+    }
+  }
+  cout << "there are " << cont << " subdetectors" << endl;
+  */
+
+  ///*
+  int count = 0;
+  getModuleSizes * gms = new getModuleSizes;
+  vector < vector < vector < int > > > allModules = gms->getLayerLadderModule();
+  vector < vector < vector < vector <int > > > > subdetector_deg;
+  subdetector_deg.resize(allModules.size()); // layer
+  for (unsigned int i = 0; i < subdetector_deg.size(); i++) {
+    subdetector_deg.at(i).resize(allModules.at(i).size()); // ladder
+    for (unsigned int j = 0; j < subdetector_deg.at(i).size(); j++) {
+      subdetector_deg.at(i).at(j).resize(allModules.at(i).at(j).size()); // module
+
+      for (unsigned int k = 0; k < subdetector_deg.at(i).at(j).size(); k++) {
+        subdetector_deg.at(i).at(j).at(k).resize(4); // subbanks
+        count++;
         for (unsigned int l = 0; l < subdetector_deg.at(i).at(j).at(k).size(); l++) {
           subdetector_deg.at(i).at(j).at(k).at(l) = 0;
         }
       }
     }
   }
-
-
+  cout << "there are " << count << " subdetectors" << endl;
+  //*/
 
   if (nevent == -1) nevent = patterns_entries;
   int max_entry = min(ievent + nevent, patterns_entries);
@@ -197,8 +239,14 @@ int main(int argc, char **argv) {
     }
   }
 
+
   TH1D * subdetector_deg_h = new TH1D("subdetector_deg_h", "subdetector_deg_h", 5, 0, 5);
+  vector <TH1D *> subdetectors_deg_layer_h;
+
+  cout << "subdetectors not contained in any patterns are :" << endl;
   for (unsigned int i = 0; i < subdetector_deg.size(); i++) { // for each layer
+      TH1D * subdetector_deg_layer_h = new TH1D(Form("subdetector_deg_h_%d", i), "subdetector_deg_h", 5, 0, 5);
+
     for (unsigned int j = 0; j < subdetector_deg.at(i).size(); j++) { // for each ladder
       for (unsigned int k = 0; k < subdetector_deg.at(i).at(j).size(); k++) { // for each module
         int deg = 0;
@@ -209,15 +257,21 @@ int main(int argc, char **argv) {
         }
         if (deg == 0) cout << i << " " << j << " " << k << endl;
         subdetector_deg_h->Fill(deg);
+        subdetector_deg_layer_h->Fill(deg);
       }
     }
+    subdetectors_deg_layer_h.push_back(subdetector_deg_layer_h);
   }
 
   plot * deg_p = new plot();
   deg_p->setDir("./plots/");
+  deg_p->setTail(tail);
   deg_p->plot1D(ladder_deg_h);
   deg_p->plot1D(module_deg_h);
   deg_p->plot1D(subdetector_deg_h);
+  for (unsigned int i = 0; i < subdetector_deg.size(); i++) { // for each layer
+    deg_p->plot1D(subdetectors_deg_layer_h.at(i));
+  }
 
   return EXIT_SUCCESS;
 }

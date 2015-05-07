@@ -22,3 +22,10 @@ void plot::plot2D(TH2D * h) {
   c->Print(Form("%s/%s%s.pdf", dir.c_str(), h->GetName(), tail.c_str()));
   h->SaveAs(Form("%s/%s%s.root", dir.c_str(), h->GetName(), tail.c_str()));
 }
+
+void plot::add(TH1 *h1, Option_t* option) {
+
+   if (!h1) return;
+   if (!fHists) fHists = new TList();
+   fHists->Add(h1,option);
+}

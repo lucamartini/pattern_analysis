@@ -3,6 +3,7 @@
 
 #include <string>
 #include "TCanvas.h"
+#include "TList.h"
 #include "TH1D.h"
 #include "TH2D.h"
 
@@ -17,10 +18,15 @@ class plot {
   void setTail(std::string newTail) {tail = newTail;};
   void setDir(std::string newDir) {dir = newDir;};
 
+  void add(TH1 *h1, Option_t* option);
+
  private:
   TCanvas * c;
   std::string tail;
   std::string dir;
+
+  TList* fHists;
+
 
 };
 
