@@ -2,11 +2,13 @@
 
 options::options(int argc, char *argv[]) :
   program_name(argv[0]),
-  short_options("hi:n:t:m"),
+  short_options("hi:n:t:f:s:5"),
+  l5(false),
   ievent(0),
   nevent(-1),
+  SS5(32),
   tail(""),
-  makeTree(false),
+  file("./inputs/treeBank_16.root"),
   argc_(argc) {
 
   argv_ = new char*[argc+1];
@@ -17,6 +19,7 @@ options::options(int argc, char *argv[]) :
     strcpy( argv_[i], argv[i] );
   }
   argv_[argc] = NULL;
+
   doit();
 }
 
@@ -34,7 +37,10 @@ void options::print_usage (FILE* stream, int exit_code) {
            " -i --ievent Start from event i.\n"
            " -n --nevent Run for n events.\n"
            " -t --tail Append tail to output files.\n"
-           " -m --makeTree make new pattern tree with strip coordinates.\n");
+           " -f --file Input file.\n"
+           " -s --SS5 Superstrip size on layer 5.\n"
+           " -5 --layer5 Split layer5 in twwo, instead of using layer 6.\n");
+
   exit (exit_code);
 }
 
@@ -58,15 +64,26 @@ void options::doit() {
         std::cout << "running for " << nevent << " events" << std::endl;
         break;
 
+      case 's':
+        SS5 = atoi(optarg);
+        std::cout << "Superstrip size on layer 5 " << SS5 << std::endl;
+        break;
+
       case 't':
         tail = optarg;
         std::cout << "appending " << tail << std::endl;
         break;
 
-      case 'm':
-        makeTree = true;
-        std::cout << "make pattern tree " << std::endl;
+      case 'f':
+        file = optarg;
+        std::cout << "input file: " << file << std::endl;
         break;
+
+      case '5':
+        l5 = true;
+        std::cout << "split layer 5 in two" << std::endl;
+        break;
+
 
       case '?': /* The user specified an invalid option. */
         /* Print usage information to standard error, and exit with exit code one (indicating abnormal termination). */

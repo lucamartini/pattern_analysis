@@ -56,7 +56,6 @@ int main(int argc, char **argv) {
   int ievent = opt.get_ievent();
   int nevent = opt.get_nevent();
   string tail = opt.get_tail();
-  bool makeTree = opt.make_tree();
 
   TFile StripCoords_f("inputs/CoordFiltered16.root"); //CoordFiltered extracted
   TTree * StripCoords_t = (TTree*)StripCoords_f.Get("StripCoords");
@@ -144,23 +143,12 @@ int main(int argc, char **argv) {
   }
 
   TFile * outfile = new TFile(Form("./outputs/patternNstrips%s.root", tail.c_str()), "RECREATE");
-  TTree * patternsNstrips_t = patterns_t->CloneTree(0);
   const int STRIP_SIZE(1024);
-  Int_t stripEntry_t[6][STRIP_SIZE];
-  patternsNstrips_t->Branch("stripEntry", stripEntry_t, Form("stripEntry[6][%d]/I", STRIP_SIZE));
-
 
   if (nevent == -1) nevent = patterns_entries;
   int max_entry = min(ievent + nevent, patterns_entries);
 
   for (int j = ievent; j < max_entry; j++) {
-    if (makeTree) {
-      for (int a = 0; a < 6; a++) {
-        for (int b = 0; b < STRIP_SIZE; b++) {
-          stripEntry_t[a][b] = -1;
-        }
-      }
-    }
     int l5 = 0, l6 = 0, l7 = 0, l8 = 0, l9 = 0, l10 = 0;
 
     patterns_t->GetEntry(j);
@@ -211,10 +199,6 @@ int main(int argc, char **argv) {
                   subpats_xy_h.at(subbank)->Fill(x, y);
                   subpats_zr_h.at(subbank)->Fill(z, r);
                   found = true;
-                  if (makeTree) {
-                    stripEntry_t[0][l5] = i;
-                    l5++;
-                  }
                   // break;
                 }
               }
@@ -244,10 +228,6 @@ int main(int argc, char **argv) {
                   subpats_xy_h.at(subbank)->Fill(x, y);
                   subpats_zr_h.at(subbank)->Fill(z, r);
                   found = true;
-                  if (makeTree) {
-                    stripEntry_t[1][l6] = i;
-                    l6++;
-                  }
                   // break;
                 }
               }
@@ -277,10 +257,6 @@ int main(int argc, char **argv) {
                   subpats_xy_h.at(subbank)->Fill(x, y);
                   subpats_zr_h.at(subbank)->Fill(z, r);
                   found = true;
-                  if (makeTree) {
-                    stripEntry_t[2][l7] = i;
-                    l7++;
-                  }
                   // break;
                 }
               }
@@ -310,10 +286,6 @@ int main(int argc, char **argv) {
                   subpats_xy_h.at(subbank)->Fill(x, y);
                   subpats_zr_h.at(subbank)->Fill(z, r);
                   found = true;
-                  if (makeTree) {
-                    stripEntry_t[3][l8] = i;
-                    l8++;
-                  }
                   // break;
                 }
               }
@@ -343,10 +315,6 @@ int main(int argc, char **argv) {
                   subpats_xy_h.at(subbank)->Fill(x, y);
                   subpats_zr_h.at(subbank)->Fill(z, r);
                   found = true;
-                  if (makeTree) {
-                    stripEntry_t[4][l9] = i;
-                    l9++;
-                  }
                   // break;
                 }
               }
@@ -377,10 +345,6 @@ int main(int argc, char **argv) {
                   subpats_xy_h.at(subbank)->Fill(x, y);
                   subpats_zr_h.at(subbank)->Fill(z, r);
                   found = true;
-                  if (makeTree) {
-                    stripEntry_t[5][l10] = i;
-                    l10++;
-                  }
                   // break;
                 }
               }
@@ -397,9 +361,6 @@ int main(int argc, char **argv) {
       plot_->plot2D(pat_zr_h);
     }
 
-    if (makeTree) {
-      patternsNstrips_t->Fill();
-    }
   }
 
   int sum(0);
@@ -422,11 +383,6 @@ int main(int argc, char **argv) {
   }
   subbankFile.close();
 
-  if (makeTree) {
-    patternsNstrips_t->Write();
-    outfile->Write();
-    cout << outfile->GetName() << " written" << endl;
-  }
   outfile->Close();
   return EXIT_SUCCESS;
 }

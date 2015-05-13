@@ -20,8 +20,10 @@ int main(int argc, char **argv) {
   int ievent = opt.get_ievent();
   int nevent = opt.get_nevent();
   string tail = opt.get_tail();
+  string inputfile = opt.get_file();
+  int SS5 = opt.get_SS5();
 
-  TFile patterns_f("./inputs/treeBank.root");
+  TFile patterns_f(inputfile.c_str());
   TTree * patterns_t = (TTree*)patterns_f.Get("sector0");
 
   //  Int_t           layers;
@@ -58,49 +60,8 @@ int main(int argc, char **argv) {
 
   vector <int> subbanks = {0, 0, 0, 0, 0}; // phi1z1, phi1z2, phi2z1, phi2z2, phi12
 
-  /*
-  // layer, ladder, module, subbank
-  vector < vector < vector < vector <int > > > > subdetector_deg_old(6); // layers
-  subdetector_deg_old.at(0).resize(3-1); // ladders: 1 + 0.5
-  subdetector_deg_old.at(1).resize(4);
-  subdetector_deg_old.at(2).resize(6);
-  subdetector_deg_old.at(3).resize(7);
-  subdetector_deg_old.at(4).resize(10);
-  subdetector_deg_old.at(5).resize(14);
-  int cont = 0;
-  for (unsigned int i = 0; i < subdetector_deg_old.size(); i++) {
-    for (unsigned int j = 0; j < subdetector_deg_old.at(i).size(); j++) {
-
-      // subdetector_deg_old.at(i).at(j).resize(5 + i); // modules
-
-      if (i <= 2 || i == 4) {
-        subdetector_deg_old.at(i).at(j).resize(5 + i);
-      }
-      else if (i == 3) {
-        if (j%2==0) subdetector_deg_old.at(i).at(j).resize(4 + i);
-        else subdetector_deg_old.at(i).at(j).resize(5 + i);
-      }
-      else if (i == 5)  {
-        if (j%2==0) subdetector_deg_old.at(i).at(j).resize(5 + i);
-        else subdetector_deg_old.at(i).at(j).resize(4 + i);
-      }
-
-      for (unsigned int k = 0; k < subdetector_deg_old.at(i).at(j).size(); k++) {
-        subdetector_deg_old.at(i).at(j).at(k).resize(subbanks.size()); // subbanks
-        cont++;
-        for (unsigned int l = 0; l < subdetector_deg_old.at(i).at(j).at(k).size(); l++) {
-          subdetector_deg_old.at(i).at(j).at(k).at(l) = 0;
-
-        }
-      }
-    }
-  }
-  cout << "there are " << cont << " subdetectors" << endl;
-  //*/
-
-  ///*
   int count = 0;
-  getModuleSizes * gms = new getModuleSizes;
+  getModuleSizes * gms = new getModuleSizes(inputfile.c_str());
   vector < vector < vector < int > > > allModules = gms->getLayerLadderModule();
   vector < vector < vector < vector <int > > > > subdetector_deg;
   subdetector_deg.resize(allModules.size()); // layer
@@ -120,19 +81,12 @@ int main(int argc, char **argv) {
     }
   }
   cout << "there are " << count << " subdetectors" << endl;
-  //*/
 
-  // for (unsigned int i = 0; i < subdetector_deg.size(); i++) {
-  //    for (unsigned int j = 0; j < subdetector_deg.at(i).size(); j++) {
-  //      for (unsigned int k = 0; k < subdetector_deg.at(i).at(j).size(); k++) {
-  //        for (unsigned int l = 0; l < subdetector_deg.at(i).at(j).at(k).size(); l++) {
-  //         subdetector_deg.at(i).at(j).at(k).at(l) = 0;
-  //       }
-  //     }
-  //   }
-  // }
+  int strip0_MIN = 0;
+  int strip0_MAX = (1024/SS5) - 1;
+  int strip0_MID = strip0_MAX / 2;
 
-  TH1D * SSsize_on_layer5 = new TH1D("SSsize_on_layer5", "SSsize_on_layer5 (#times 32)", 10, 0., 10.);
+  TH1D * SSsize_on_layer5 = new TH1D("SSsize_on_layer5", Form("SSsize_on_layer5 (#times %d)", SS5), 10, 0., 10.);
 
   if (nevent == -1) nevent = patterns_entries;
   int max_entry = min(ievent + nevent, patterns_entries);
@@ -155,29 +109,18 @@ int main(int argc, char **argv) {
           max_strip = HDSS_t[0][j];
         }
       }
-      if (min_strip < 0) cout << min_strip << endl;
-      if (max_strip > 31) cout << max_strip << endl;
+      if (min_strip < strip0_MIN) cout << "min_strip " << min_strip << endl;
+      if (max_strip > strip0_MAX) cout << "max_strip " << max_strip << endl;
       if (min_strip > max_strip) cout << "WTF" << endl;
     }
 
-    bool first_half_in_ladder1 =  (ladder_p[0] == 1 && max_strip <= 15);
+    bool first_half_in_ladder1 =  (ladder_p[0] == 1 && max_strip <= strip0_MID);
     bool first_half_in_ladders = (ladder_p[0] == 0) || first_half_in_ladder1;
 
-
-    // if (ladder_p[0] == 1 && min_strip <= 7 && max_strip >= 8) {
-    //   cout << "7-8    " << min_strip << " " << max_strip << endl;
-    // }
-    // if (ladder_p[0] == 1 && min_strip <= 15 && max_strip >= 16) {
-    //   cout << "15-16  " << min_strip << " " << max_strip << endl;
-    // }
-    // if (ladder_p[0] == 1 && min_strip <= 23 && max_strip >= 24) {
-    //   cout << "23-24  " << min_strip << " " << max_strip << endl;
-    // }
-
-    if (ladder_p[0] == 1 && min_strip <= 15 && max_strip >= 16) {
+    if (ladder_p[0] == 1 && min_strip <= strip0_MID && max_strip >= strip0_MID + 1) {
       subbanks[4]++;
       subbank = 4;
-      cout << min_strip << " " << max_strip << endl;
+      cout << min_strip << " " << max_strip << endl; // 0 by construction
     }
     else {
       if (first_half_in_ladders && module_p[5] < 5) {
@@ -210,7 +153,7 @@ int main(int argc, char **argv) {
 
       subdetector_deg.at(j).at(ladderino).at(module_p[j]).at(subbank)++; // subdetector is in subbank
     }
-   }
+  }
   cout << "pattern loop ended" << endl;
 
   int sum(0);
@@ -227,7 +170,9 @@ int main(int argc, char **argv) {
   }
   subbankFile.close();
 
-  TH1D * subdetector_deg_h = new TH1D("subdetector_deg_h", "subdetector_deg_h", 5, 0, 5);
+  TH1D * subdetector_deg_h = new TH1D("subdetector_deg_h", Form("subdetector_deg_h%s;degeneration;number of modules", tail.c_str()), 5, 0, 5);
+  subdetector_deg_h->SetFillColor(kBlue);
+  subdetector_deg_h->SetFillStyle(3001);
   vector <TH1D *> subdetectors_deg_layer_h;
 
   struct jk {
@@ -239,7 +184,9 @@ int main(int argc, char **argv) {
 
   cout << "subdetectors not contained in any patterns are :" << endl;
   for (unsigned int i = 0; i < subdetector_deg.size(); i++) { // for each layer
-    TH1D * subdetector_deg_layer_h = new TH1D(Form("subdetector_deg_h_%d", i), "subdetector_deg_h", 5, 0, 5);
+    TH1D * subdetector_deg_layer_h = new TH1D(Form("subdetector_deg_h_%d", i), Form("subdetector_deg_h_%d%s;degeneration;number of modules", i, tail.c_str()), 5, 0, 5);
+    subdetector_deg_layer_h->SetFillColor(kBlue);
+    subdetector_deg_layer_h->SetFillStyle(3001);
     for (unsigned int j = 0; j < subdetector_deg.at(i).size(); j++) { // for each ladder
       for (unsigned int k = 0; k < subdetector_deg.at(i).at(j).size(); k++) { // for each module
         int deg = 0;
@@ -274,6 +221,57 @@ int main(int argc, char **argv) {
   cout << "these fking deg in layer 0 (rightly) are: " << endl;
   for (unsigned i = 0; i < jk_v.size(); i++) {
     cout << jk_v.at(i).j << "  " << jk_v.at(i).k << endl;
+  }
+
+  TH1D * subbanks_h = new TH1D("subbanks_h", Form("subbanks_h%s;subbanks;fraction of modules", tail.c_str()), 4, 0, 4);
+  subbanks_h->GetXaxis()->SetBinLabel(1, "#phi_{1}Z_{1}");
+  subbanks_h->GetXaxis()->SetBinLabel(2, "#phi_{1}Z_{2}");
+  subbanks_h->GetXaxis()->SetBinLabel(3, "#phi_{2}Z_{1}");
+  subbanks_h->GetXaxis()->SetBinLabel(4, "#phi_{2}Z_{2}");
+  subbanks_h->GetYaxis()->SetTitleOffset(1.2);
+  subbanks_h->SetMinimum(0);
+  subbanks_h->SetStats(0);
+  subbanks_h->SetLineWidth(2);
+
+  vector <int> ladder_module_integral(subdetector_deg.at(0).at(0).at(0).size(), 0);
+
+  vector <TH1D *> subbanks_h_v;
+  for (unsigned int i = 0; i < subdetector_deg.size(); i++) { // for each layer
+    TH1D * subbanks_layer_h = new TH1D(Form("subbanks_layer_h_%d", i), Form("subbanks_layer_h_%d%s;subbanks;fraction of modules", i, tail.c_str()), 4, 0, 4);
+    subbanks_layer_h->GetXaxis()->SetBinLabel(1, "#phi_{1}Z_{1}");
+    subbanks_layer_h->GetXaxis()->SetBinLabel(2, "#phi_{1}Z_{2}");
+    subbanks_layer_h->GetXaxis()->SetBinLabel(3, "#phi_{2}Z_{1}");
+    subbanks_layer_h->GetXaxis()->SetBinLabel(4, "#phi_{2}Z_{2}");
+    subbanks_layer_h->GetYaxis()->SetTitleOffset(1.2);
+    subbanks_layer_h->SetMinimum(0);
+    subbanks_layer_h->SetStats(0);
+    subbanks_layer_h->SetLineWidth(2);
+    vector <int> ladder_module_layer_integral(subdetector_deg.at(i).at(0).at(0).size(), 0);
+
+    for (unsigned int j = 0; j < subdetector_deg.at(i).size(); j++) { // for each ladder
+      for (unsigned int k = 0; k < subdetector_deg.at(i).at(j).size(); k++) { // for each module
+        for (unsigned int l = 0; l < subdetector_deg.at(i).at(j).at(k).size(); l++) { // for each subbbank
+          if (subdetector_deg.at(i).at(j).at(k).at(l)>0) {
+            //          ladder_module_layer_integral[l] +=  subdetector_deg.at(i).at(j).at(k).at(l);
+            //          ladder_module_integral[l] += subdetector_deg.at(i).at(j).at(k).at(l);
+            ladder_module_layer_integral.at(l)++;
+            ladder_module_integral.at(l)++;
+          }
+        }
+      }
+    }
+    for (unsigned int l = 0; l < subdetector_deg.at(i).at(0).at(0).size(); l++) {
+      subbanks_layer_h->SetBinContent(l+1, (double) ladder_module_layer_integral.at(l) / subdetectors_deg_layer_h.at(i)->Integral());
+    }
+    subbanks_h_v.push_back(subbanks_layer_h);
+  }
+  for (unsigned int l = 0; l < subdetector_deg.at(0).at(0).at(0).size(); l++) {
+    subbanks_h->SetBinContent(l+1, (double) ladder_module_integral.at(l)/subdetector_deg_h->Integral());
+  }
+
+  deg_p->plot1D(subbanks_h);
+  for (unsigned int i = 0; i < subdetector_deg.size(); i++) { // for each layer
+    deg_p->plot1D(subbanks_h_v.at(i));
   }
 
   return EXIT_SUCCESS;

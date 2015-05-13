@@ -1,6 +1,6 @@
 #include "getModuleSizes.h"
 
-getModuleSizes::getModuleSizes(string ttree_file) {
+getModuleSizes::getModuleSizes(string ttree_file) : stripsOn0(-1) {
   input_f = new TFile(ttree_file.c_str());
   tree = (TTree*)input_f->Get("sector0");
 
@@ -11,13 +11,10 @@ getModuleSizes::getModuleSizes(string ttree_file) {
   tree->SetBranchAddress("ladder_t", ladder_p, &b_ladder_p);
   tree->SetBranchAddress("module_t", module_p, &b_module_p);
   tree->SetBranchAddress("segment_t", segment_p, &b_segment_p);
-  //tree->SetBranchAddress("sstrips", &sstrips, &b_sstrips);
-  //tree->SetBranchAddress("HDSS_t", HDSS_t, &b_HDSS_t);
-  tree->SetBranchStatus("sstrips", false);
-  tree->SetBranchStatus("HDSS_t", false);
-
-
-
+  tree->SetBranchAddress("sstrips", &sstrips, &b_sstrips);
+  tree->SetBranchAddress("HDSS_t", HDSS_t, &b_HDSS_t);
+  // tree->SetBranchStatus("sstrips", false);
+  // tree->SetBranchStatus("HDSS_t", false);
 
   doLoops();
 
@@ -132,4 +129,23 @@ vector < vector < vector < int > > > getModuleSizes::getLayerLadderModuleOld() {
     }
   }
   return subdetector_deg;
+}
+
+int getModuleSizes::getStripsOn0() {
+  if (stripsOn0 == -1) doStripsOn0Loop();
+  return stripsOn0;
+}
+
+void getModuleSizes::doStripsOn0Loop() {
+  int maxstrips = -1;
+  for (int i = 0; i < events; i++ ) {
+    b_sstrips->GetEntry(i);
+    b_HDSS_t->GetEntry(i);
+    for (int j = 0; j < sstrips[0]; j++) {
+      if (HDSS_t[0][j] > maxstrips) {
+        maxstrips = HDSS_t[0][j];
+      }
+    }
+  }
+  stripsOn0 = maxstrips;
 }

@@ -14,10 +14,7 @@ using namespace std;
 int main(int argc, char **argv) {
 
   options opt(argc, argv);
-  int ievent = opt.get_ievent();
-  int nevent = opt.get_nevent();
   string tail = opt.get_tail();
-  bool makeTree = opt.make_tree();
 
   TFile StripCoords_f("inputs/CoordFiltered16.root"); //CoordFiltered extracted
   TTree * StripCoords_t = (TTree*)StripCoords_f.Get("StripCoords");
