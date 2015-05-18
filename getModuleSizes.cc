@@ -1,22 +1,6 @@
 #include "getModuleSizes.h"
 
-getModuleSizes::getModuleSizes(string ttree_file) : stripsOn0(-1) {
-  input_f = new TFile(ttree_file.c_str());
-  tree = (TTree*)input_f->Get("sector0");
-
-  events = tree->GetEntries();
-
-  // tree->SetBranchAddress("layers", &layers, &b_layers);
-  tree->SetBranchStatus("layers", false);
-  tree->SetBranchAddress("ladder_t", ladder_p, &b_ladder_p);
-  tree->SetBranchAddress("module_t", module_p, &b_module_p);
-  tree->SetBranchAddress("segment_t", segment_p, &b_segment_p);
-  tree->SetBranchAddress("sstrips", &sstrips, &b_sstrips);
-  tree->SetBranchAddress("HDSS_t", HDSS_t, &b_HDSS_t);
-  // tree->SetBranchStatus("sstrips", false);
-  // tree->SetBranchStatus("HDSS_t", false);
-
-  doLoops();
+getModuleSizes::getModuleSizes(string ttree_file, int nevent, int ievent) : patternloop(ttree_file, nevent, ievent), stripsOn0(-1) {
 
 }
 
@@ -34,7 +18,7 @@ void getModuleSizes::doLadderLoop(){
     ladders_per_layer[j] = -2;
   }
 
-  for (int i = 0; i < events; i++ ) {
+  for (int i = ievent_; i < max_entry; i++ ) {
     b_ladder_p->GetEntry(i);
     for (unsigned int j = 0; j < LAYERS; j++) {
       if (ladder_p[j] > ladders_per_layer.at(j)) ladders_per_layer.at(j) = ladder_p[j];
@@ -57,7 +41,7 @@ void getModuleSizes::doModuleLoop() {
     }
   }
 
-  for (int i = 0; i < events; i++ ) {
+  for (int i = ievent_; i < max_entry; i++ ) {
     b_ladder_p->GetEntry(i);
     b_module_p->GetEntry(i);
     for (unsigned int j = 0; j < LAYERS; j++) {
@@ -138,7 +122,7 @@ int getModuleSizes::getStripsOn0() {
 
 void getModuleSizes::doStripsOn0Loop() {
   int maxstrips = -1;
-  for (int i = 0; i < events; i++ ) {
+  for (int i = ievent_; i < max_entry; i++ ) {
     b_sstrips->GetEntry(i);
     b_HDSS_t->GetEntry(i);
     for (int j = 0; j < sstrips[0]; j++) {

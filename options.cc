@@ -2,8 +2,8 @@
 
 options::options(int argc, char *argv[]) :
   program_name(argv[0]),
-  short_options("hi:n:t:f:s:5"),
-  l5(false),
+  short_options("hf:i:n:t:s:y:"),
+  type(0),
   ievent(0),
   nevent(-1),
   SS5(32),
@@ -39,7 +39,10 @@ void options::print_usage (FILE* stream, int exit_code) {
            " -t --tail Append tail to output files.\n"
            " -f --file Input file.\n"
            " -s --SS5 Superstrip size on layer 5.\n"
-           " -5 --layer5 Split layer5 in twwo, instead of using layer 6.\n");
+           " -y --type type of subbank:\n"
+           "\t0: phi2 on layer 6, z2 on layer 10\n"
+           "\t1: phi2 on layer 5, z2 on layer 10\n"
+           "\t2: z4 on layer 10\n");
 
   exit (exit_code);
 }
@@ -79,9 +82,9 @@ void options::doit() {
         std::cout << "input file: " << file << std::endl;
         break;
 
-      case '5':
-        l5 = true;
-        std::cout << "split layer 5 in two" << std::endl;
+      case 'y':
+        type = atoi(optarg);
+        std::cout << "subbank type " << type << std::endl;
         break;
 
 

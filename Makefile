@@ -17,13 +17,13 @@ CXX	         += -I$(INCLUDEDIR)
 # TARGETS #
 ###########
 
-all: patternsToStrips subpatterns subpatterns_l5 drawgeometry
+all: patternsToStrips subpatterns drawgeometry
 
 patternsToStrips: patternsToStrips.cc options plot
 	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o patternsToStrips  $(ROOTLIBSFILTERED) patternsToStrips.cc options plot
 
-subpatterns: subpatterns.cc options plot getModuleSizes
-	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o subpatterns  $(ROOTLIBSFILTERED) subpatterns.cc options plot getModuleSizes
+subpatterns: subpatterns.cc options plot getModuleSizes makesubbanks
+	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o subpatterns  $(ROOTLIBSFILTERED) subpatterns.cc options plot getModuleSizes patternloop makesubbanks
 
 subpatterns_l5: subpatterns_l5.cc options plot getModuleSizes
 	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o subpatterns_l5  $(ROOTLIBSFILTERED) subpatterns_l5.cc options plot getModuleSizes
@@ -37,8 +37,15 @@ options: options.cc
 plot: plot.cc
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) -o plot  plot.cc
 
-getModuleSizes: getModuleSizes.cc
+makesubbanks:: makesubbanks.cc patternloop
+	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) -o makesubbanks  makesubbanks.cc
+
+getModuleSizes: getModuleSizes.cc patternloop
 	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) -o getModuleSizes  getModuleSizes.cc
 
+patternloop: patternloop.cc
+	$(CXX) -c $(CXXFLAGS) $(ROOTCFLAGS) -o patternloop  patternloop.cc
+
+
 clean:
-	rm -rf patternsToStrips subpatterns subpatterns_l5 drawgeometry options plot getModuleSizes
+	rm -rf patternsToStrips subpatterns subpatterns_l5 drawgeometry options plot getModuleSizes patternloop makesubbanks

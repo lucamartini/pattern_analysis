@@ -1,6 +1,7 @@
 #include "options.h"
 #include "plot.h"
 #include "getModuleSizes.h"
+#include "makesubbanks.h"
 
 #include "TTree.h"
 #include "TFile.h"
@@ -21,51 +22,21 @@ int main(int argc, char **argv) {
   int nevent = opt.get_nevent();
   string tail = opt.get_tail();
   string inputfile = opt.get_file();
-
-  TFile patterns_f(inputfile.c_str());
-  TTree * patterns_t = (TTree*)patterns_f.Get("sector0");
-
-  //  Int_t           layers;
-  Short_t         ladder_p[6];   //[layers]
-  Short_t         module_p[6];   //[layers]
-  Short_t         segment_p[6];   //[layers]
-  //  Int_t           sstrips[6];
-  //  Int_t           HDSS_t[6][8];   //[layers]
-
-  // List of branches
-  //  TBranch        *b_layers;   //!
-  TBranch        *b_ladder_p;   //!
-  TBranch        *b_module_p;   //!
-  TBranch        *b_segment_p;   //!
-  //  TBranch        *b_sstrips;   //!
-  //  TBranch        *b_HDSS_t;   //!
-  // patterns_t->SetBranchAddress("layers", &layers, &b_layers);
-  patterns_t->SetBranchStatus("layers", false);
-  patterns_t->SetBranchAddress("ladder_t", ladder_p, &b_ladder_p);
-  patterns_t->SetBranchAddress("module_t", module_p, &b_module_p);
-  patterns_t->SetBranchAddress("segment_t", segment_p, &b_segment_p);
-  //patterns_t->SetBranchAddress("sstrips", &sstrips, &b_sstrips);
-  //patterns_t->SetBranchAddress("HDSS_t", HDSS_t, &b_HDSS_t);
-  patterns_t->SetBranchStatus("sstrips", false);
-  patterns_t->SetBranchStatus("HDSS_t", false);
-
-  int patterns_entries = patterns_t->GetEntries();
-
-  cout << "patterns are " << patterns_entries << endl;
-
-  plot * plot_ = new plot();
-  plot_->setTail(tail);
-  plot_->setDir("./plots_temp/");
+  int type = opt.get_type();
+  int SS5 = opt.get_SS5();
 
   vector <int> subbanks = {0, 0, 0, 0}; // phi1z1, phi1z2, phi2z1, phi2z2
+  if (type == 1) subbanks.push_back(0); // 5th fake bank, that must be 0, check
 
   int count = 0;
   getModuleSizes * gms = new getModuleSizes(inputfile.c_str());
+  gms->doLoops();
   vector < vector < vector < int > > > allModules = gms->getLayerLadderModule();
   vector < vector < vector < vector <int > > > > subdetector_deg;
   subdetector_deg.resize(allModules.size()); // layer
   for (unsigned int i = 0; i < subdetector_deg.size(); i++) {
-    subdetector_deg.at(i).resize(allModules.at(i).size()); // ladder
+    if (type == 1 && i == 0) subdetector_deg.at(i).resize(allModules.at(i).size()-1); // ladder 0: 1 + 0.5
+    else subdetector_deg.at(i).resize(allModules.at(i).size()); // ladder
     for (unsigned int j = 0; j < subdetector_deg.at(i).size(); j++) {
       subdetector_deg.at(i).at(j).resize(allModules.at(i).at(j).size()); // module
 
@@ -81,37 +52,16 @@ int main(int argc, char **argv) {
   cout << "there are " << count << " subdetectors" << endl;
   delete gms;
 
-  if (nevent == -1) nevent = patterns_entries;
-  int max_entry = min(ievent + nevent, patterns_entries);
+  makesubbanks * sb = new makesubbanks(&subbanks, &subdetector_deg, inputfile.c_str(), nevent, ievent);
+  sb->setSubbankType(type);
+  if (type == 1) sb->setSS5(SS5);
+  sb->doLoops();
+  int patterns(sb->get_entries());
+  cout << "patterns are " << patterns << endl;
 
-  for (int i = ievent; i < max_entry; i++) {
-
-    patterns_t->GetEntry(i);
-    int subbank = -1;
-    if (i%100000==0) cout << i << " / " << max_entry << endl;
-    if (ladder_p[1] < 2 && module_p[5] < 5) {
-      subbanks[0]++;
-      subbank = 0;
-    }
-    if (ladder_p[1] < 2 && module_p[5] >= 5) {
-      subbanks[1]++;
-      subbank = 1;
-    }
-    if (ladder_p[1] >= 2 && module_p[5] < 5) {
-      subbanks[2]++;
-      subbank = 2;
-    }
-    if (ladder_p[1] >= 2 && module_p[5] >= 5) {
-      subbanks[3]++;
-      subbank = 3;
-    }
-
-    for (int j = 0; j <= 5; j++) {
-      subdetector_deg.at(j).at(ladder_p[j]).at(module_p[j]).at(subbank)++; // in pattern i, subdetector j is in subbank
-
-    }
-  }
-  cout << "pattern loop ended" << endl;
+  plot * plot_ = new plot();
+  plot_->setTail(tail);
+  plot_->setDir("./plots_temp/");
 
   int sum(0);
   for (int i = 0; i < 4; i++) {
@@ -119,9 +69,9 @@ int main(int argc, char **argv) {
   }
 
   ofstream subbankFile(Form("./subbanks/subbank%s.txt", tail.c_str()));
-  cout << "in total, the bank is made by #patterns = " << patterns_entries << " ( " << sum << " ) " << endl;
+  cout << "in total, the bank is made by #patterns = " << patterns << " ( " << sum << " ) " << endl;
   cout << "the 4 subbanks are made by:" << endl;
-  for (int i = 0; i < 4; i++) {
+  for (unsigned int i = 0; i < subbanks.size(); i++) {
     cout << subbanks[i] << endl;
     subbankFile << subbanks[i] << endl;
   }
@@ -132,6 +82,13 @@ int main(int argc, char **argv) {
   subdetector_deg_h->SetFillStyle(3001);
   vector <TH1D *> subdetectors_deg_layer_h;
 
+  struct jk {
+    int j;
+    int k;
+  };
+
+  vector <jk> jk_v;
+
   cout << "subdetectors not contained in any patterns are :" << endl;
   for (unsigned int i = 0; i < subdetector_deg.size(); i++) { // for each layer
     TH1D * subdetector_deg_layer_h = new TH1D(Form("subdetector_deg_h_%d", i), Form("subdetector_deg_h_%d%s;degeneration;number of modules", i, tail.c_str()), 5, 0, 5);
@@ -141,7 +98,9 @@ int main(int argc, char **argv) {
     for (unsigned int j = 0; j < subdetector_deg.at(i).size(); j++) { // for each ladder
       for (unsigned int k = 0; k < subdetector_deg.at(i).at(j).size(); k++) { // for each module
         int deg = 0;
-        for (unsigned int l = 0; l < subdetector_deg.at(i).at(j).at(k).size(); l++) { // for each subbbank
+        unsigned int subbanks_size =  subdetector_deg.at(i).at(j).at(k).size();
+        if (type == 1) subbanks_size--; // real subbanks only
+        for (unsigned int l = 0; l < subbanks_size; l++) { // for each real subbbank
           if (subdetector_deg.at(i).at(j).at(k).at(l) > 0) {
             deg++;
           }
@@ -149,6 +108,12 @@ int main(int argc, char **argv) {
         if (deg == 0) cout << i << " " << j << " " << k << endl;
         subdetector_deg_h->Fill(deg);
         subdetector_deg_layer_h->Fill(deg);
+        if (type == 1 && i == 0 && deg > 2) {
+          jk jk0;
+          jk0.j = j;
+          jk0.k = k;
+          jk_v.push_back(jk0);
+        }
       }
     }
     subdetectors_deg_layer_h.push_back(subdetector_deg_layer_h);
@@ -160,6 +125,14 @@ int main(int argc, char **argv) {
   deg_p->plot1D(subdetector_deg_h);
   for (unsigned int i = 0; i < subdetector_deg.size(); i++) { // for each layer
     deg_p->plot1D(subdetectors_deg_layer_h.at(i));
+  }
+  if (type == 1) deg_p->plot1D(sb->get_SSsize_on_layer5());
+
+  if (type == 1) {
+    cout << "these fking deg in layer 0 (rightly) are: " << endl;
+    for (unsigned i = 0; i < jk_v.size(); i++) {
+      cout << jk_v.at(i).j << "  " << jk_v.at(i).k << endl;
+    }
   }
 
   TH1D * subbanks_h = new TH1D("subbanks_h", Form("subbanks_h%s;subbanks;fraction of modules", tail.c_str()), 4, 0, 4);

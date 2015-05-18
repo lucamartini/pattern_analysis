@@ -14,7 +14,7 @@ const struct option long_options[] = {
   { "nevent", 1, NULL, 'n' },
   { "tail", 1, NULL, 't' },
   { "SS5", 1, NULL, 's' },
-  { "layer5", 0, NULL, '5'},
+  { "type", 1, NULL, 'y'},
   { NULL, 0, NULL, 0 } /* Required at end of array. */
 };
 
@@ -23,7 +23,7 @@ class options {
   options(int argc, char *argv[]);
   ~options();
 
-  bool get_l5() {return l5;};
+  int get_type() {return type;};
   int get_ievent() {return ievent;};
   int get_nevent() {return nevent;};
   int get_SS5() {return SS5;};
@@ -38,7 +38,7 @@ class options {
   int next_option;
   std::string short_options;
 
-  bool l5;
+  int type;
   int ievent;
   int nevent;
   int SS5;
