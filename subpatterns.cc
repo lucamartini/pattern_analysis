@@ -15,6 +15,35 @@
 
 using namespace std;
 
+void setLabels(TH1D * h, int type = 0) {
+
+  if (type == 0) {
+    h->GetXaxis()->SetBinLabel(1, "#phi_{1}Z_{1}");
+    h->GetXaxis()->SetBinLabel(2, "#phi_{1}Z_{2}");
+    h->GetXaxis()->SetBinLabel(3, "#phi_{2}Z_{1}");
+    h->GetXaxis()->SetBinLabel(4, "#phi_{2}Z_{2}");
+  }
+  if (type == 1) {
+    h->GetXaxis()->SetBinLabel(1, "#phi_{1}Z_{1}");
+    h->GetXaxis()->SetBinLabel(2, "#phi_{1}Z_{2}");
+    h->GetXaxis()->SetBinLabel(3, "#phi_{2}Z_{1}");
+    h->GetXaxis()->SetBinLabel(4, "#phi_{2}Z_{2}");
+  }
+  if (type == 2) {
+    h->GetXaxis()->SetBinLabel(1, "Z_{1}");
+    h->GetXaxis()->SetBinLabel(2, "Z_{2}");
+    h->GetXaxis()->SetBinLabel(3, "Z_{3}");
+    h->GetXaxis()->SetBinLabel(4, "Z_{4}");
+  }
+
+  h->GetYaxis()->SetTitleOffset(1.2);
+  h->SetMinimum(0);
+  h->SetStats(0);
+  h->SetLineWidth(2);
+
+
+}
+
 int main(int argc, char **argv) {
 
   options opt(argc, argv);
@@ -136,28 +165,14 @@ int main(int argc, char **argv) {
   }
 
   TH1D * subbanks_h = new TH1D("subbanks_h", Form("subbanks_h%s;subbanks;fraction of modules", tail.c_str()), 4, 0, 4);
-  subbanks_h->GetXaxis()->SetBinLabel(1, "#phi_{1}Z_{1}");
-  subbanks_h->GetXaxis()->SetBinLabel(2, "#phi_{1}Z_{2}");
-  subbanks_h->GetXaxis()->SetBinLabel(3, "#phi_{2}Z_{1}");
-  subbanks_h->GetXaxis()->SetBinLabel(4, "#phi_{2}Z_{2}");
-  subbanks_h->GetYaxis()->SetTitleOffset(1.2);
-  subbanks_h->SetMinimum(0);
-  subbanks_h->SetStats(0);
-  subbanks_h->SetLineWidth(2);
+  setLabels(subbanks_h, type);
 
   vector <int> ladder_module_integral(subdetector_deg.at(0).at(0).at(0).size(), 0);
 
   vector <TH1D *> subbanks_h_v;
   for (unsigned int i = 0; i < subdetector_deg.size(); i++) { // for each layer
     TH1D * subbanks_layer_h = new TH1D(Form("subbanks_layer_h_%d", i), Form("subbanks_layer_h_%d%s;subbanks;fraction of modules", i, tail.c_str()), 4, 0, 4);
-    subbanks_layer_h->GetXaxis()->SetBinLabel(1, "#phi_{1}Z_{1}");
-    subbanks_layer_h->GetXaxis()->SetBinLabel(2, "#phi_{1}Z_{2}");
-    subbanks_layer_h->GetXaxis()->SetBinLabel(3, "#phi_{2}Z_{1}");
-    subbanks_layer_h->GetXaxis()->SetBinLabel(4, "#phi_{2}Z_{2}");
-    subbanks_layer_h->GetYaxis()->SetTitleOffset(1.2);
-    subbanks_layer_h->SetMinimum(0);
-    subbanks_layer_h->SetStats(0);
-    subbanks_layer_h->SetLineWidth(2);
+    setLabels(subbanks_layer_h, type);
     vector <int> ladder_module_layer_integral(subdetector_deg.at(i).at(0).at(0).size(), 0);
 
     for (unsigned int j = 0; j < subdetector_deg.at(i).size(); j++) { // for each ladder

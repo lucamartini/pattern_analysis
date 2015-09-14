@@ -8,6 +8,14 @@ patternloop::patternloop(string ttree_file, int nevent, int ievent) : nevent_(ne
   if (nevent == -1) nevent = events;
   max_entry = min(ievent + nevent, events);
 
+  size_t sec_pos(ttree_file.find("sec"));
+  if (sec_pos == string::npos) {
+    cout << "could not find sector number" << endl;
+    exit(1);
+  }
+  string sector_str(ttree_file.substr(sec_pos));
+  sscanf(sector_str.c_str(), "sec%d", &sector);
+  cout << "sector " << sector << endl;
 
   // tree->SetBranchAddress("layers", &layers, &b_layers);
   tree->SetBranchStatus("layers", false);
@@ -18,8 +26,6 @@ patternloop::patternloop(string ttree_file, int nevent, int ievent) : nevent_(ne
   tree->SetBranchAddress("HDSS_t", HDSS_t, &b_HDSS_t);
   // tree->SetBranchStatus("sstrips", false);
   // tree->SetBranchStatus("HDSS_t", false);
-
-  //  doLoops();
 
 }
 

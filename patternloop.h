@@ -7,6 +7,7 @@
 //#include <vector>
 #include <string>
 #include <iostream>
+#include <cstdio>
 
 using namespace std;
 
@@ -43,6 +44,8 @@ class patternloop {
   TBranch        *b_segment_p;   //!
   TBranch        *b_sstrips;   //!
   TBranch        *b_HDSS_t;   //!
+
+  int sector;
 };
 
 #endif

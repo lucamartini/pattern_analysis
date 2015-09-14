@@ -2,6 +2,7 @@ ROOTCFLAGS    = $(shell root-config --cflags)
 ROOTGLIBS     = $(shell root-config --glibs)
 
 CXX           = clang++
+#CXX           = gcc
 CXXFLAGS      = -fPIC -ansi -D_GNU_SOURCE -O2 -Wall -Wextra
 #LDFLAGS       = -g3
 
@@ -25,9 +26,6 @@ patternsToStrips: patternsToStrips.cc options plot
 subpatterns: subpatterns.cc options plot getModuleSizes makesubbanks
 	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o subpatterns  $(ROOTLIBSFILTERED) subpatterns.cc options plot getModuleSizes patternloop makesubbanks
 
-subpatterns_l5: subpatterns_l5.cc options plot getModuleSizes
-	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o subpatterns_l5  $(ROOTLIBSFILTERED) subpatterns_l5.cc options plot getModuleSizes
-
 drawgeometry: drawgeometry.cc options plot
 	$(CXX) $(CXXFLAGS) $(ROOTCFLAGS) -o drawgeometry  $(ROOTLIBSFILTERED) drawgeometry.cc options plot
 
@@ -48,4 +46,4 @@ patternloop: patternloop.cc
 
 
 clean:
-	rm -rf patternsToStrips subpatterns subpatterns_l5 drawgeometry options plot getModuleSizes patternloop makesubbanks
+	rm -rf patternsToStrips subpatterns drawgeometry options plot getModuleSizes patternloop makesubbanks

@@ -4,19 +4,27 @@ import subprocess
 
 # ./subpatterns_l5 -t _new_F -s 8 -f "inputs/treeBank_16_F.root "
 
-command = "./subpatterns"
-tail_l5 = ["", "_l5"]
+command = ["./subpatterns"]
+type = range(3)
 
-tail_fountain = ["", "_F"]
+tail_fountain = ["_sec24", "_sec24_F"]
 SSs = [32, 8]
-inputs = ["inputs/treeBank_16.root", "inputs/treeBank_16_F.root "]
+inputs = ["inputs/treeBank_3GeV_sec24.root",
+          "inputs/treeBank_3GeV_sec24_F.root "]
+# inputs = ["inputs/treeBank_sec16.root", "inputs/treeBank_sec16_F.root "]
 
-for i in range(2):
+n = 0
+for i in range(3):
     for j in range(2):
-        command_i = [command + tail_l5[i]]
-        tail = tail_l5[i] + tail_fountain[j]
-        options_i = ["--tail", tail, "--SS5", str(SSs[j]), "--file", inputs[j]]
+        tail_ij = "_type" + str(type[i]) + tail_fountain[j]
+        options_i = ["--tail", tail_ij,
+                     "--type", str(type[i]),
+                     "--SS5", str(SSs[j]),
+                     "--file", inputs[j]]
 
-        full_command = command_i + options_i
+        full_command = command + options_i
         print full_command
         subprocess.call(full_command)
+        n = n+1
+
+print "run", n, "times"

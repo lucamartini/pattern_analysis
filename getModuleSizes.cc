@@ -25,11 +25,12 @@ void getModuleSizes::doLadderLoop(){
     }
   }
 
-  //cout << "ladders are: "<< endl;
+  cout << "ladders are: "<< endl;
   for (unsigned int j = 0; j < LAYERS; j++) {
     ladders_per_layer.at(j)++; // add 0
-    //cout << j << " " << ladders_per_layer.at(j) << endl;
+    cout << j << " " << ladders_per_layer.at(j) << endl;
   }
+  //cout << "ladder loop done" << endl;
 }
 
 void getModuleSizes::doModuleLoop() {
@@ -51,13 +52,21 @@ void getModuleSizes::doModuleLoop() {
     }
   }
 
-  //cout << "modules are: "<< endl;
+  cout << "modules are: "<< endl;
   for (unsigned int j = 0; j < LAYERS; j++) {
     for (int k = 0; k < ladders_per_layer.at(j); k++) {
       modules_per_ladder_per_layer.at(j).at(k)++; // add 0
-      //cout << j << " " << k << " " << modules_per_ladder_per_layer.at(j).at(k) << endl;
+      cout << j << " " << k << " " << modules_per_ladder_per_layer.at(j).at(k) << endl;
     }
   }
+
+  if (sector==17) {
+    cout << "making fixes for sector " << sector << " ..."  << endl;
+    modules_per_ladder_per_layer.at(4).at(0) = 9;
+    modules_per_ladder_per_layer.at(5).at(13) = 9;
+  }
+
+  cout << "module loop done" << endl;
 
 }
 
